@@ -5,31 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>DNS Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <style>
-        .dns input[type="radio"] {
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <style>
+            .dns input[type="radio"] {
                 display:none;
-        }
+            }
+    
+            .dns .radio {
+                border: 1px solid #ccc;
+                padding: 10px;
+                margin-bottom: 10px;
+                border-radius: 5px; /* Adds rounded corners */
+                color:#8f8d8d; 
+            }
+    
+            .dns .radio:hover {
+                border: 1px solid #434344; /* Bootstrap primary color */
+            }
+    
+            .dns .radio input[type="radio"]:checked + p {
+                /*
+                color: #007bff; /* Bootstrap primary color */
+                */
+            }
+    
+            .dns .radio.selected {
+                border: 1px solid #030303; /* Bootstrap primary color */
+                color:#030303; 
+            }
+    
+            .container {
+                margin-top: 25px; /* Adds some space at the top */
+            }
+    
+            .dns, .records {
+                background-color: #f8f9fa; /* Bootstrap light color */
+                padding: 15px;
+                border-radius: 5px; /* Adds rounded corners */
+                margin-bottom: 25px; /* Adds some space at the bottom */
+            }
+        </style>
 
-        .dns .radio {
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin-bottom: 10px;
-        }
-
-        .dns .radio:hover {
-            border: 1px solid #000;
-        }
-
-        .dns .radio input[type="radio"]:checked + p {
-            color: #000;
-        }
-
-        .dns .radio.selected {
-            border: 1px solid #000;
-        }
-    </style>
-
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
     $(document).ready(function() {
         // Changing border color and text color on click event
@@ -46,6 +62,13 @@
             } else {
                 $('.records').show();
             }
+
+            // Add DNSSEC in type selection when cloudflare is selected
+            if ($(this).find('input[type="radio"]').attr('id') === 'cloudflare') {
+                $('.form-select').append('<option value="4">DNSSEC</option>');
+            } else {
+                $(".form-select option[value='4']").remove();
+            }
         });
 
         // Adding custom DNS
@@ -53,7 +76,7 @@
             e.preventDefault();
             var dnsVal = $('#adddns').val();
             if(dnsVal){
-                $('#dnses').append('<li>' + dnsVal + '</li>');
+                $('#dnses').append('<li>' + dnsVal +  ' <a href="#" class="deleteCustomDns">x</a></li>');
                 $('#adddns').val('');
             } else {
                 alert('Please enter a DNS');
@@ -75,10 +98,66 @@
                 alert('Please fill all fields');
             }
         });
+
+        // Code to handle deletion of custom DNS entries
+        $(".dns").on("click", ".deleteCustomDns", function(e) {
+            e.preventDefault();
+            
+            // Confirm deletion
+            if (confirm("Are you sure you want to delete this DNS entry?")) {
+                // Remove the list item
+                $(this).parent().remove();
+            }
+        });
+
+
+        var currentEditingRow = null; 
+        // Open the edit modal when an Edit link is clicked
+        $(".table").on("click", "a", function(e) {
+            e.preventDefault();
+    
+            currentEditingRow = $(this).closest("tr");
+            // Get the record values from the table row
+            var type = currentEditingRow.find("td:eq(0)").text();
+            var name = currentEditingRow.find("td:eq(1)").text();
+            var content = currentEditingRow.find("td:eq(2)").text();
+            var ttl = currentEditingRow.find("td:eq(3)").text();
+    
+            // Set the values in the modal inputs
+            $("#edit-type").val(type);
+            $("#edit-name").val(name);
+            $("#edit-content").val(content);
+            $("#edit-ttl").val(ttl);
+    
+            // Show the modal
+            $('#editModal').modal('show');
+        });
+    
+        // Save changes and update the table row when the Save Changes button is clicked
+        $("#saveChanges").click(function() {
+            var row = $(".table a:contains('Edit')").closest("tr");
+            var type = $("#edit-type").val();
+            var name = $("#edit-name").val();
+            var content = $("#edit-content").val();
+            var ttl = $("#edit-ttl").val();
+    
+            row.find("td:eq(0)").text(type);
+            row.find("td:eq(1)").text(name);
+            row.find("td:eq(2)").text(content);
+            row.find("td:eq(3)").text(ttl);
+    
+            $('#editModal').modal('hide');
     });
-</script>
 
-
+        // Delete record when Delete button in the modal is clicked
+        $("#deleteRecord").click(function() {
+        if (confirm("Are you sure you want to delete this record?")) {
+            currentEditingRow.remove();
+            $('#editModal').modal('hide');
+        }
+    });
+    });
+</script>    
 </head>
 
 <body>
@@ -150,7 +229,7 @@
         <div>
             <div class="row">
                 <div class="col-md-2">
-                    <select class="form-select" aria-label="Default select example">
+                    <select class="form-select" name="type" aria-label="Default select example">
                         <option selected>Choose Type</option>
                         <option value="1">A</option>
                         <option value="2">CNAME</option>
@@ -173,7 +252,46 @@
         </div>
     </div>
 
-    
+   <!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editModalLabel">Edit Record</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="mb-3">
+              <label for="edit-type" class="form-label">Type</label>
+              <input type="text" class="form-control" id="edit-type">
+            </div>
+            <div class="mb-3">
+              <label for="edit-name" class="form-label">Name</label>
+              <input type="text" class="form-control" id="edit-name">
+            </div>
+            <div class="mb-3">
+              <label for="edit-content" class="form-label">Content</label>
+              <input type="text" class="form-control" id="edit-content">
+            </div>
+            <div class="mb-3">
+              <label for="edit-ttl" class="form-label">TTL</label>
+              <input type="text" class="form-control" id="edit-ttl">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+            <!--
+
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            -->
+
+          <button type="button" class="btn btn-danger" id="deleteRecord">Delete</button>
+          <button type="button" class="btn btn-primary" id="saveChanges">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div> 
 </body>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 </html>

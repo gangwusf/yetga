@@ -85,7 +85,7 @@
         });
 
         // Adding custom DNS
-        $('#adddns').siblings('button').click(function(e) {
+        $('#adddnsbtn').click(function(e) {
             e.preventDefault();
             var dnsVal = $('#adddns').val();
             if(dnsVal){
@@ -204,7 +204,14 @@
 
                 <input type="radio" id="custom" name="dns" value="custom" > 
                 <ul id="dnses"></ul>
-                <input  name="dns" id="adddns"/> <button>+</button>
+                <div class="row">
+                    <div class="col-md-10">
+                        <input  name="dns" id="adddns" class="form-control"/> 
+                        </div>
+                    <div class="col-md-2">
+                        <button type="button" id="adddnsbtn" class="btn btn-primary" >Add DNS Server</button>
+                        </div>
+                </div>
                 </div>
             </div>
         </div>
@@ -257,11 +264,11 @@
                 <div class="col-md-5">
                     <input type="text" class="form-control" id="record_content" placeholder="Content">
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <input type="text" class="form-control" id="record_ttl" placeholder="TTL">
                 </div>
-                <div class="col-md-1">
-                    <button type="button" class="btn btn-primary" id="addrecords">Add</button>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-primary" id="addrecords">Add Record</button>
                 </div>
             </div>
         </div>

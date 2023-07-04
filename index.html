@@ -1,1 +1,179 @@
-Welcome to gregwu.men
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DNS Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <style>
+        .dns input[type="radio"] {
+                display:none;
+        }
+
+        .dns .radio {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .dns .radio:hover {
+            border: 1px solid #000;
+        }
+
+        .dns .radio input[type="radio"]:checked + p {
+            color: #000;
+        }
+
+        .dns .radio.selected {
+            border: 1px solid #000;
+        }
+    </style>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Changing border color and text color on click event
+        $('.dns .radio').click(function() {
+            $('.dns .radio').removeClass('selected');
+            $('.dns .radio input[type="radio"]').prop('checked', false);
+
+            $(this).addClass('selected');
+            $(this).find('input[type="radio"]').prop('checked', true);
+
+            // Hide records section when custom DNS option is selected
+            if ($(this).find('input[type="radio"]').attr('id') === 'custom') {
+                $('.records').hide();
+            } else {
+                $('.records').show();
+            }
+        });
+
+        // Adding custom DNS
+        $('#adddns').siblings('button').click(function(e) {
+            e.preventDefault();
+            var dnsVal = $('#adddns').val();
+            if(dnsVal){
+                $('#dnses').append('<li>' + dnsVal + '</li>');
+                $('#adddns').val('');
+            } else {
+                alert('Please enter a DNS');
+            }
+        });
+
+        // Adding new record
+        $('#addrecords').click(function() {
+            var type = $(this).parent().prevAll().find('select option:selected').text();
+            var name = $(this).parent().prevAll().find('input#record_name').val();
+            var content = $(this).parent().prevAll().find('input#record_content').val();
+            var ttl = $(this).parent().prevAll().find('input#record_ttl').val();
+
+            if (type !== 'Choose Type' && name && content && ttl){
+                var newRow = '<tr><td>' + type + '</td><td>' + name + '</td><td>' + content + '</td><td>' + ttl + '</td><td><a href="#">Edit</a></td></tr>';
+                $('.table tbody').append(newRow);
+            } else {
+                console.log(type, name, content, ttl);
+                alert('Please fill all fields');
+            }
+        });
+    });
+</script>
+
+
+</head>
+
+<body>
+    
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h1>DNS Management</h1>
+                <h4>Domain name</h4>
+                <p>gregwu.men</p>
+            </div>
+            <div class="dns">
+                <h4>Domain Name Servers</h4>
+                <div class="radio selected">
+
+                <input type="radio" id="powerdns" name="dns" value="powerdns" checked>
+                <p>ndns1.cosmotown.com</p>
+                <p>ndns2.cosmotown.com</p>
+                </div>
+                <div class="radio">
+
+                <input type="radio" id="cloudflare" name="dns" value="cloudflare" >
+                <p>ns1.cosmotown.com</p>
+                <p>ns2.cosmotown.com</p>
+                <p>ns3osmotown.com</p>
+                <p>ns4.cosmotown.com</p>
+                </div>
+                <div class="radio">
+
+                <input type="radio" id="custom" name="dns" value="custom" > 
+                <ul id="dnses"></ul>
+                <input  name="dns" id="adddns"/> <button>+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container records">
+        <div class="row">
+            <h4>Domain Name Records</h4>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Type</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Content</th>
+                        <th scope="col">TTL</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>A</td>
+                        <td>www</td>
+                        <td>128.34.132.3</td>
+                        <td>300</td>
+                        <td>    <a href="#">Edit</a></td>
+                    </tr>
+                    <tr>
+                        <td>A</td>
+                        <td>*</td>
+                        <td>128.34.132.3</td>
+                        <td>300</td>
+                        <td>    <a href="#">Edit</a></td>
+                    </tr>
+                    </tbody>
+            </table>
+        </div>
+        <div>
+            <div class="row">
+                <div class="col-md-2">
+                    <select class="form-select" aria-label="Default select example">
+                        <option selected>Choose Type</option>
+                        <option value="1">A</option>
+                        <option value="2">CNAME</option>
+                        <option value="3">MX</option>
+                        </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="text" class="form-control" id="record_name" placeholder="Name">
+                </div>
+                <div class="col-md-5">
+                    <input type="text" class="form-control" id="record_content" placeholder="Content">
+                </div>
+                <div class="col-md-2">
+                    <input type="text" class="form-control" id="record_ttl" placeholder="TTL">
+                </div>
+                <div class="col-md-1">
+                    <button type="button" class="btn btn-primary" id="addrecords">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+</body>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+</html>
